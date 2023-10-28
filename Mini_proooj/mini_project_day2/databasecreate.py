@@ -101,7 +101,8 @@ for id, password in student_data:
     cursor.execute("INSERT INTO student_login (userid, password) VALUES (%s, %s)", (id, password))
 
 
-company_hr_data=[("rajesh@tcs.in","password1")]
+company_hr_data=[("rajesh@tcs.in","password1"),
+                 ("ajith@wipro.in","ajith")]
 for id,password in company_hr_data:
     cursor.execute("INSERT INTO company_hr_login (userid, password) VALUES (%s, %s)", (id, password))
 
@@ -124,7 +125,8 @@ studentdetails_data=[
     ("student1@rajagiri.edu.in","password1","john doe","9","2002-09-12"),
     ("student1@rajagiri.edu.in","password1","john doe","10","2005-09-12"),
     ("student1@rajagiri.edu.in","password1","john doe","6","2007-09-12"),
-    ("student1@rajagiri.edu.in","password1","john doe","2","2009-09-12")
+    ("student1@rajagiri.edu.in","password1","john doe","2","2009-09-12"),
+    ("akhasyg@rajagiri.edu.in","akshay","akshay g","10","2003-12-12")
 ]
 
 for userid, password,name,cgpa,dob in studentdetails_data:

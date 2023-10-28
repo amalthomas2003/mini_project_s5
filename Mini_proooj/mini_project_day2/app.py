@@ -34,10 +34,13 @@ mysql = MySQL(app)
 ############################################################################################login starts here###########################################
 @app.route('/', methods=['GET', 'POST'])
 def login():
+
     global element_found
     if request.method == 'POST':
         user_id = request.form['user_id']
         password = request.form['password']
+        print(user_id)
+        print(password)
 
         # Check the user's role based on the email domain
         if user_id.endswith(details.student_userid_ends_with()):
