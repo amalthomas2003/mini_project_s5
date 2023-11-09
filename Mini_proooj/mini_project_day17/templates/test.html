@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Example</title>
+</head>
+<body>
+    <form action="{{ url_for('handle_button') }}" method="post">
+        <button type="text" name="action" value="see_details">See Company Details</button>
+        <button type="submit" name="action" value="apply">Apply</button>
+    </form>
+</body>
+</html>

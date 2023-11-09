@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eligible Companies</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='student_dashboard_style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Eligible Companies</h1>
+        <ul class="company-list">
+            {% for company in companies %}
+                <li>
+                    {{ company | upper }}
+                    <form action="" method="post" style="display: inline;">
+                        <input type="hidden" name="company_name" value="{{ company }}">
+                        <button type="submit" name="see_interview_details" value="see_interview_details">See Company Details</button>
+                    </form>
+                    <form action="{{ url_for('handle_application') }}" method="post" style="display: inline;">
+                        <input type="hidden" name="company_name" value="{{ company }}">
+                        <button type="submit" name="action" value="apply">Apply</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>
