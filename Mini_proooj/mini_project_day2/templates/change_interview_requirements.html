@@ -9,10 +9,13 @@
     <div class="container">
         <form method="POST" action="">
             <label for="min_cgpa" class="label-big">Minimum CGPA:</label>
-            <input type="text" name="min_cgpa" id="min_cgpa" class="input-big"><br>
+            <input type="text" name="min_cgpa" id="min_cgpa" class="input-big" required><br>
 
             <label for="max_dob" class="label-big">Maximum DOB (YYYY-MM-DD):</label>
-            <input type="text" name="max_dob" id="after_dob" class="input-big"><br>
+            <input type="text" name="max_dob" id="after_dob" class="input-big" required><br>
+
+            <label for="temp_batch" class="label-big">Batch (eg.EE,CU,ME):</label>
+            <input type="text" name="batch" id="batch" class="input-big" required><br>
 
             <input type="submit" value="Set Requirements">
         </form>

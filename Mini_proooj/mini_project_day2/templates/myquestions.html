@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='myquestions_style.css') }}">
+</head>
+<body>
+    <h1>Student Dashboard</h1>
+
+    <div class="question-container">
+        {% for question in questions %}
+            <div class="question-box">
+                <p>Question ID: {{ question[0] }}</p>
+                <p>Company Name: {{ question[1] }}</p>
+                <p>Date: {{ question[2] }}</p>
+                <p>Status: <span id="status_{{ question[0] }}"></span></p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        {% for question in questions %}
+            document.getElementById('status_{{ question[0] }}').innerText = getStatusText({{ question[3] }});
+        {% endfor %}
+
+        function getStatusText(status) {
+            if (status === 1) {
+                return 'Accepted';
+            } else if (status === 0) {
+                return 'Rejected';
+            } else {
+                return 'Pending';
+            }
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='myquestions.js') }}"></script>
+</body>
+</html>

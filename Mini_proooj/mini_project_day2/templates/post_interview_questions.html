@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Details</title>
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='post_interview_questions_style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Post Question</h1>
+        <form method="post" action="/student_dashboard/post_questions" onsubmit="return validateForm()">
+            <label for="tags">Tags:</label>
+            <input type="text" id="tags" name="tags" placeholder="Tags(csv)" required>
+            <label for="tags">Company name:</label>
+            <input type="text" id="c_name" name="c_name" placeholder="Company Name" required>
+            <textarea id="editor"></textarea>
+            <input type="hidden" name="content" id="content-input">
+            <button id="save-button" type="submit">Save</button>
+        </form>
+        
+    </div>
+    <script src="{{ url_for('static', filename='post_interview_questions.js') }}">
+        
+    </script>
+</body>
+</html>

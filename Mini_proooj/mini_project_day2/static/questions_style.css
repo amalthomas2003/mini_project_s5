@@ -1,0 +1,64 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+#questions-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.question-box {
+    border: 2px solid #3498db;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: 20px;
+    width: 80%; /* Takes 80% of the screen width */
+    box-sizing: border-box;
+    background-color: #fff;
+    transition: transform 0.3s;
+}
+
+.question-box:hover {
+    transform: scale(1.05);
+}
+
+.company {
+    font-size: 24px; /* Larger font for tags */
+    font-weight: bold;
+    color: rgb(0, 0, 0); /* Green color for tags */
+    text-align: center;
+}
+
+.question {
+    font-size: 18px; /* Slightly smaller font for questions */
+    margin-top: 10px;
+}
+
+.student-info {
+    display: flex;
+    justify-content: space-between;
+}
+
+.date {
+    color: #888;
+    margin-top: 10px;
+}
+.tags {
+    color: #888;
+    margin-top: 10px;
+}
+
+
+#pagination-container {
+    margin-top: 20px;
+}
+
+.tag-info {
+    display: flex;
+    justify-content: space-between;
+}

@@ -2,7 +2,7 @@
 /* setting the gradient */
 body {
     font-family: Arial, sans-serif;
-    background: linear-gradient(to right, #3498db, #66a0d2, #3498db);
+    background: linear-gradient(to right, rgb(200, 200, 200), #d3d3d3, rgb(201, 201, 201));
     margin: 0;
     padding: 0;
 }
@@ -45,11 +45,11 @@ th {
 }
 
 tr:nth-child(odd) {
-    background-color: #f2f2f2; /* Light gray for odd rows */
+    background-color: rgb(255, 255, 255); /* Light gray for odd rows */
     color: black; /* Black text color for better visibility */
 }
 
 tr:nth-child(even) {
-    background-color: #ffffff; /* White for even rows */
+    background-color: rgba(209, 209, 209, 0.397); /* White for even rows */
     color: black;
 }

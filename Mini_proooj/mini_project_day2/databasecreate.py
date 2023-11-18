@@ -7,11 +7,12 @@
 ---
 ---STUDENT TABLES:
 ---student_details
----
----
+---questions
+---applied_companies
 ---
 ---COMPANY TABLES:
 ---company_requirements
+---interview_details
 ---
 
 
@@ -94,7 +95,9 @@ student_data = [
     ("student7@rajagiri.edu.in", "password7"),
     ("student8@rajagiri.edu.in", "password8"),
     ("student9@rajagiri.edu.in", "password9"),
-    ("student10@rajagiri.edu.in", "password10")
+    ("student10@rajagiri.edu.in", "password10"),
+    ("u2109031@rajagiri.edu.in","pp"),
+    ("akshayg@rajagiri.edu.in","g")
 ]
 
 for id, password in student_data:
@@ -116,22 +119,58 @@ cursor.execute("""
         password VARCHAR(50) NOT NULL,
         name VARCHAR(255) NOT NULL,
         cgpa FLOAT NOT NULL,
-        dob DATE
+        dob DATE NOT NULL,
+        batch VARCHAR(50) NOT NULL,
+        points INT NOT NULL,
+        applied_companies VARCHAR(255),
+        graduation_year INT,
+        accepted_companies VARCHAR(255),
+        rejected_companies VARCHAR(255)
     )
 """)
 
 studentdetails_data=[
-    ("u2109008@rajagiri.edu.in","u210","Amal Thomas","8","2003-09-12"),
-    ("student1@rajagiri.edu.in","password1","john doe","9","2002-09-12"),
-    ("student1@rajagiri.edu.in","password1","john doe","10","2005-09-12"),
-    ("student1@rajagiri.edu.in","password1","john doe","6","2007-09-12"),
-    ("student1@rajagiri.edu.in","password1","john doe","2","2009-09-12"),
-    ("akhasyg@rajagiri.edu.in","akshay","akshay g","10","2003-12-12")
+    ("u2109008@rajagiri.edu.in","u210","Amal Thomas","8","2003-09-12","CU",0,2023),
+    ("student1@rajagiri.edu.in","password1","john doe","9","2002-09-12","ME",0,2023),
+    ("student1@rajagiri.edu.in","password1","john doe","10","2005-09-12","EE",0,2023),
+    ("student1@rajagiri.edu.in","password1","john doe","6","2007-09-12","CU",0,2023),
+    ("student1@rajagiri.edu.in","password1","john doe","2","2009-09-12","CU",0,2023),
+    ("akshayg@rajagiri.edu.in","akshay","akshay g","10","2003-12-12","CU",0,2023),
+    ("u2109031@rajagiri.edu.in","pp","jose paul","10","2003-12-09","CU",0,2023)
 ]
 
-for userid, password,name,cgpa,dob in studentdetails_data:
-    cursor.execute("INSERT INTO student_details (userid, password,name,cgpa,dob) VALUES (%s, %s,%s,%s,%s)", (userid, password,name,cgpa,dob))
+for userid, password,name,cgpa,dob,batch,points,graduation_year in studentdetails_data:
+    cursor.execute("INSERT INTO student_details (userid, password,name,cgpa,dob,batch,points,graduation_year) VALUES (%s, %s,%s,%s,%s,%s,%s,%s)", (userid, password,name,cgpa,dob,batch,points,graduation_year))
 
+
+
+# Create table 'questions' if not exists
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS questions(
+        q_id INT AUTO_INCREMENT PRIMARY KEY,
+        tags VARCHAR(2500),
+        userid VARCHAR(255) NOT NULL,
+        username VARCHAR(255) NOT NULL,
+        question TEXT,
+        status INT NOT NULL,
+        question_date DATE,
+        company_name VARCHAR(2555)
+        
+    )
+""")
+
+
+
+questions_data=[
+    ('oop,data structures,uml','u2109008@rajagiri.edu.in','Amal Thomas',"what is you name ?2@#$#@",0,"2023-12-12","tcs"),
+    ('oop,data structures,uml','u2109008@rajagiri.edu.in','Amal Thomas',"what is you name ?2@#$#@",1,"2023-09-09","tcs"),
+    ('oop,data structures,uml','u2109008@rajagiri.edu.in','Amal Thomas',"what is you name ?2@#$#@",0,"2023-08-09","wipro"),
+    ('oop,data structures,uml','u2109008@rajagiri.edu.in','Amal Thomas',"what is you name ?2@#$#@",1,"2023-07-09","wipro"),
+    ('akshay,sigma','akshayg@rajagiri.edu.in','akshay',"My name is GG",1,"2023-09-23","tcs")
+]
+
+for tags,userid,username,question,status,question_date,company_name in questions_data:
+    cursor.execute("INSERT INTO questions (tags,userid,username,question,status,question_date,company_name) VALUES (%s,%s,%s,%s,%s,%s,%s)", (tags,userid,username,question,status,question_date,company_name))
 
 #create table 'company_requirements' if not exists
 cursor.execute("""
@@ -139,20 +178,78 @@ cursor.execute("""
         id INT AUTO_INCREMENT PRIMARY KEY,
         company_name VARCHAR(50) NOT NULL,
         min_cgpa FLOAT NOT NULL,
-        max_dob DATE
+        graduation_year INT,
+        batch VARCHAR(255) NOT NULL
+        
     )
 """)
 
 company_requirements_data=[
-    ("tcs",7.9,"2004-01-01"),
-    ("wipro",9,"2005-01-01"),
-    ("infosys",4,"2004-02-01")
+    ("tcs",3,2023,"CU,EE,ME,EC"),
+    ("wipro",4,2023,"CU"),
+    ("infosys",5,2023,"CU,EE,ME,EC")
 ]
 
-for company_name, min_cgpa,max_dob in company_requirements_data:
-    cursor.execute("INSERT INTO company_requirements (company_name,min_cgpa,max_dob) VALUES (%s, %s,%s)", (company_name, min_cgpa,max_dob))
+for company_name, min_cgpa,graduation_year,batch in company_requirements_data:
+    cursor.execute("INSERT INTO company_requirements (company_name,min_cgpa,graduation_year,batch) VALUES (%s, %s,%s,%s)", (company_name, min_cgpa,graduation_year,batch))
+
+
+
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS interview_details(
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            company_name VARCHAR(50) NOT NULL,
+            company_description TEXT,
+            interview_detail TEXT,
+            last_date DATE,
+            interview_date DATE,
+            power INT
+            
+            
+               
+        )
+    """)
+
+interview_details_data=[
+    ("tcs","Tata Consultancy Services Limited is an Indian multinational information technology services and consulting company ","interview is held at hotel Blu Radission","2023-12-12","2023-12-30",1),
+    ("wipro","We are Wipro","interview is held at hotel Saj Park","2023-12-12","2023-12-30",1),
+    ("infosys","We are INfosys","interview is held at hotel Taj","2023-12-12","2023-12-30",1)
+]
+
+for company_name,company_description,interview_detail,last_date,interview_date,power in interview_details_data:
+    cursor.execute("INSERT INTO interview_details (company_name,company_description,interview_detail,last_date,interview_date,power) VALUES (%s,%s,%s,%s,%s,%s)",(company_name,company_description,interview_detail,last_date,interview_date,power))
+
+
+#####################               applied companies
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS applied_companies (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(255),
+    student_name VARCHAR(255),
+    company_name VARCHAR(255),
+    application_status INT
+)
+""")
+
+
+
+
+
+
+
 
 
 connection.commit()
 cursor.close()
 connection.close()
+
+
+
+
+
+
+
+
+
+print("Database Created Successfully")
