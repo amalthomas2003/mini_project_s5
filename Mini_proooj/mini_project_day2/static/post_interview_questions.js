@@ -7,17 +7,16 @@ document.addEventListener("DOMContentLoaded", function () {
         content_style: 'body { font-size: 16px; }',
     });
 
-    const form = document.getElementById('postQuestionsForm');
+    const saveButton = document.getElementById('save-button');
     const contentInput = document.getElementById('content-input');
 
-    form.addEventListener('submit', function (e) {
-        e.preventDefault(); // Prevent the default form submission
-
+    saveButton.addEventListener('click', function (e) {
         const content = tinymce.get('editor').getContent();
-        contentInput.value = content;
+        contentInput.value = content; // Update the hidden input field with the content
 
         // Create a FormData object to send the form data
-        const formData = new FormData(form);
+        const formData = new FormData();
+        formData.append('content', content);
 
         // Send the form data to the server
         fetch('/student_dashboard/post_questions', {

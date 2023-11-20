@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, redirect, url_for, session,js
 from flask_mysqldb import MySQL
 import details
 from datetime import datetime,date
+import re
 
 
 current_date = date.today()
@@ -484,9 +485,11 @@ def post_questions():
         c_name=request.form.get('c_name')
         print(c_name)
         content = request.form.get('content')
+        print(content)
         cur=mysql.connection.cursor()
         question_date=datetime.now().strftime("%Y-%m-%d")
         if tags !=None and c_name != None:
+            print("yay")
             cur.execute("INSERT INTO questions(tags,userid,username,question,status,question_date,company_name) VALUES (%s,%s,%s,%s,%s,%s,%s)",(tags,session['user_id'],session['student_name'],content,1,question_date,c_name))
             mysql.connection.commit()
             cur.close()
@@ -502,7 +505,7 @@ def view_questions():
             FROM questions AS Q
             JOIN student_details AS SD ON Q.userid = SD.userid
             WHERE Q.status = 1 
-            ORDER BY Q.question_date ASC
+            ORDER BY Q.question_date DESC
         """)
         all_questions=cur.fetchall()
         questions_data=list(all_questions)
@@ -517,13 +520,16 @@ def view_questions():
             size=rank[4]
             question+=(font_style,name_color,style,weight,size)
             questions_data1.append(question)
-        #print(questions_data1)
-        #return redirect(url_for('student_dashboard'))
+        cur=mysql.connection.cursor()
+        cur.execute("SELECT COUNT(q_id) FROM questions")
+        total_questions=cur.fetchone()
+        cur.close()
+        #print(total_questions[0])
 
         
 
 
-    return render_template('questions.html', questions_data=questions_data1,q_suffix=details.q_suffix(),q_prefix=details.q_prefix())
+    return render_template('questions.html', questions_data=questions_data1,q_suffix=details.q_suffix(),q_prefix=details.q_prefix(),total_questions=total_questions,items_per_page=10)
 
 @app.route('/student_dashboard/view_result')
 def view_result():
@@ -538,12 +544,70 @@ def view_result():
 @app.route('/student_dashboard/view_my_questions')
 def view_my_questions():
     cursor=mysql.connection.cursor()
-    cursor.execute("SELECT q_id,company_name,question_date,status FROM questions WHERE userid = %s",(session['user_id'],))
+    cursor.execute("SELECT q_id,company_name,question_date,status FROM questions WHERE userid = %s ORDER BY q_id DESC",(session['user_id'],))
     questions=list(cursor.fetchall())
     cursor.close()
-    return render_template('myquestions.html', questions=questions)
+    return render_template('myquestions.html', questions=questions ,prefix=details.q_prefix(),suffix=details.q_suffix())
 
 
+
+@app.route('/student_dasboard/view_my_questions/view_the_question',methods=["GET","POST"],endpoint="view_the_question_endpoint")
+def view_the_question():
+    action=request.form.get('action')
+    if action=='apply':
+        q_id=request.form.get('q_id')
+        cur=mysql.connection.cursor()
+        cur.execute("SELECT question FROM questions WHERE q_id = %s ",(q_id,))
+        the_question=cur.fetchone()
+        cur.close()
+        print(the_question)
+    return render_template('the_question.html',the_question=the_question[0])
+
+
+
+@app.route('/student_dashboard/view_question/questions_search', methods=['GET'])
+def questions_search():
+    search_text = request.args.get('search_text').lower()
+
+
+    if search_text:
+        cur=mysql.connection.cursor()
+        cur.execute("""
+            SELECT Q.username, Q.userid, Q.question, Q.question_date, Q.tags, Q.company_name, SD.points , Q.q_id
+            FROM questions AS Q
+            JOIN student_details AS SD ON Q.userid = SD.userid
+            WHERE Q.status = 1
+            ORDER BY Q.question_date DESC
+        """)
+        all_questions=cur.fetchall()
+        questions_data=list(all_questions)
+        cur.close()
+        questions_data1=[]
+        for question in questions_data:
+            rank = details.choose_rank(question[6])
+            font_style=rank[0]
+            name_color=rank[1]
+            style=rank[2]
+            weight=rank[3]
+            size=rank[4]
+            question+=(font_style,name_color,style,weight,size)
+            if (re.search(r'{}'.format(re.escape(search_text)),str(question[0]).lower()) or
+                re.search(r'{}'.format(re.escape(search_text)),str(question[1]).lower()) or
+                re.search(r'{}'.format(re.escape(search_text)),str(question[2]).lower()) or
+                re.search(r'{}'.format(re.escape(search_text)),str(question[3]).lower()) or
+                re.search(r'{}'.format(re.escape(search_text)),str(question[4]).lower()) or
+                re.search(r'{}'.format(re.escape(search_text)),str(question[5]).lower()) or
+                re.search(r'{}'.format(re.escape(search_text)),str(question[6]).lower()) or
+                re.search(r'{}'.format(re.escape(search_text)),str(question[7]).lower()) or
+                re.search(r'{}'.format(re.escape(search_text)),str(details.q_prefix().lower()+str(question[7]).lower())+details.q_suffix().lower())):
+                questions_data1.append(question)
+    else:
+        return redirect(url_for('view_question_endpoint'))
+
+
+    return render_template('questions.html', questions_data=questions_data1,q_suffix=details.q_suffix(),q_prefix=details.q_prefix())
+       
+    
 
 
 
