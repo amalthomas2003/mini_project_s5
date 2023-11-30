@@ -105,7 +105,8 @@ for id, password in student_data:
 
 
 company_hr_data=[("rajesh@tcs.in","password1"),
-                 ("ajith@wipro.in","ajith")]
+                 ("ajith@wipro.in","ajith"),
+                 ("amal@infosys.in","amal")]
 for id,password in company_hr_data:
     cursor.execute("INSERT INTO company_hr_login (userid, password) VALUES (%s, %s)", (id, password))
 

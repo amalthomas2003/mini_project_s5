@@ -16,7 +16,7 @@
                     {% if company in existing_companies %}
                         <span class="Applied_message"> Applied</span>
                     
-                        <form action="{{ url_for('view_interview_details') }}" method="post" style="display: inline;">
+                        <form action="{{ url_for('view_interview_details_endpoint') }}" method="post" style="display: inline;">
                             <input type="hidden" name="company_name" value="{{ company }}">
                             <button type="submit" name="action" value="see_interview_details">Interview Details</button>
                         </form>

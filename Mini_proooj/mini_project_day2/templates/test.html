@@ -3,103 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Details</title>
-    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='post_interview_questions_style.css') }}">
+    <title>Pie Chart Example</title>
 </head>
 <body>
-    <div class="container">
-        <h2>Post Question</h2>
-        <form method="post" action="/student_dashboard">
-            <!-- Tags field -->
-            <label for="tags">Tags:</label>
-            <input type="text" id="tags" name="tags" placeholder="Tags(csv)" required>
-            <label for="tags">Company name:</label>
-            <input type="text" id="c_name" name="c_name" placeholder="Company Name" required>
-            
-            
-            <!-- Content editor -->
-            <textarea id="editor"></textarea>
-            
-            <!-- Hidden input for content -->
-            <input type="hidden" name="content" id="content-input">
-            
-            <!-- Save button -->
-            <button id="save-button" type="submit">Save</button>
-        </form>
-    </div>
-    <script src="{{ url_for('static', filename='post_interview_questions.js') }}">
-    </script>
-
+    <!-- Display the pie chart as an image -->
+    <img src="data:image/png;base64,{{ pie_chart_data }}" alt="Pie Chart">
 </body>
 </html>
-
-
-
-document.addEventListener("DOMContentLoaded", function () {
-    tinymce.init({
-        selector: '#editor',
-        height: '50vh',  // You can adjust the height as needed
-        width: '100%', 
-        plugins: 'image link lists',
-        menubar: 'edit view insert format table tools',
-        toolbar: 'undo redo | styleselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | numlist bullist outdent indent | link image | forecolor backcolor | removeformat',
-        content_style: 'body { font-size: 16px; }',
-    });
-
-    const saveButton = document.getElementById('save-button');
-    const contentInput = document.getElementById('content-input');
-    const tagsInput = document.getElementById('tags');
-    const c_nameInput = document.getElementById('c_name');
-
-
-    saveButton.addEventListener('click', function (e) {
-        const content = tinymce.get('editor').getContent();
-        contentInput.value = content; // Update the hidden input field with the content
-
-        // Create a FormData object to send the form data
-        const formData = new FormData();
-        formData.append('content', content);
-        formData.append('tags', tagsInput.value);  // Append the 'tags' value to the FormData
-        formData.append('c_name', c_nameInput.value); 
-
-        // Send the form data to the server
-        fetch('/student_dashboard/post_questions', {
-            method: 'POST',
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Handle the response from the server
-            if (data.message === "Save Success") {
-                // Show a "Save Success" popup
-                alert("Save Success");
-
-                // Automatically redirect to the company_hr_dashboard page
-                window.location.href = '/student_dashboard';
-            }
-        })
-        .catch(error => {
-            // Handle any errors that occur during the fetch request
-            console.error('Error:', error);
-        });
-    });
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

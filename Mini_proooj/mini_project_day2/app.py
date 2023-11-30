@@ -3,7 +3,9 @@ from flask_mysqldb import MySQL
 import details
 from datetime import datetime,date
 import re
-
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
 
 current_date = date.today()
 current_date_str = current_date.strftime('%Y-%m-%d') #in yyyy-mm-dd format
@@ -166,7 +168,7 @@ def company_hr_dashboard():
 def invalid_login_credentials():
     return "Invalid Details . Please Retry."
 
-
+#############################################endpoints are mandatory for decorator function to work
 #decorator functtion for hr of the company
 def hr_required(view_function):
     def decorated_function(*args, **kwargs):
@@ -372,7 +374,8 @@ def update_application_status(user_id, decision):
     cursor.close()
 
 # Route to display the application scrutiny page
-@app.route('/hr_dashboard/application_scrutiny')
+@app.route('/hr_dashboard/application_scrutiny',endpoint="application_scurtiny_endpoint")
+@hr_required
 def application_scrutiny():
     # Dummy data (replace with actual data retrieval logic)
     cursor=mysql.connection.cursor()
@@ -389,7 +392,7 @@ def process_decision():
 
     update_application_status(user_id, decision)
 
-    return redirect(url_for('application_scrutiny'))
+    return redirect(url_for('application_scurtiny_endpoint'))
 
 
 
@@ -401,6 +404,7 @@ def process_decision():
 
 
 @app.route('/student_dashboard/eligible_companies', endpoint="eligible_companies_endpoint")
+@student_required
 def eligible_companies():
     cur = mysql.connection.cursor()
 
@@ -437,7 +441,8 @@ def eligible_companies():
     return render_template("eligible_companies.html", companies=companies,existing_companies=see_applied_companies)
 
 
-@app.route('/student_dashboard/handle_application', methods=['POST'])
+@app.route('/student_dashboard/handle_application', methods=['POST'],endpoint="handle_application_endpoint")
+@student_required
 def handle_application():    
     action=request.form.get('action')
     #print(action)
@@ -450,7 +455,8 @@ def handle_application():
     return redirect(url_for('eligible_companies_endpoint'))
 
 
-@app.route('/student_dashboard/view_inerview_details',methods=['POST'])
+@app.route('/student_dashboard/view_inerview_details',methods=['POST'],endpoint="view_interview_details_endpoint")
+@student_required
 def view_interview_details():
     action=request.form.get('action')
     print(action)
@@ -473,6 +479,7 @@ def view_interview_details():
         )
 
 @app.route('/student_dashboard/post_questions', methods=['GET','POST'], endpoint='post_question_endpoint')
+@student_required
 #2 for waiting question approval
 #1 for approved questtions
 #0 for rejected questtions
@@ -497,6 +504,7 @@ def post_questions():
     return render_template("post_interview_questions.html")
 
 @app.route('/student_dashboard/view_questions', methods=['GET','POST'], endpoint='view_question_endpoint')
+@student_required
 def view_questions():
     if request.method == 'GET':
         cur=mysql.connection.cursor()
@@ -531,7 +539,8 @@ def view_questions():
 
     return render_template('questions.html', questions_data=questions_data1,q_suffix=details.q_suffix(),q_prefix=details.q_prefix(),total_questions=total_questions,items_per_page=10)
 
-@app.route('/student_dashboard/view_result')
+@app.route('/student_dashboard/view_result',endpoint="view_result_endpoint")
+@student_required
 def view_result():
     cursor=mysql.connection.cursor()
     cursor.execute("SELECT company_name,application_status FROM applied_companies WHERE user_id = %s",(session['user_id'],))
@@ -541,7 +550,8 @@ def view_result():
 
 
 
-@app.route('/student_dashboard/view_my_questions')
+@app.route('/student_dashboard/view_my_questions',endpoint="view_my_question_endpoint")
+@student_required
 def view_my_questions():
     cursor=mysql.connection.cursor()
     cursor.execute("SELECT q_id,company_name,question_date,status FROM questions WHERE userid = %s ORDER BY q_id DESC",(session['user_id'],))
@@ -552,6 +562,7 @@ def view_my_questions():
 
 
 @app.route('/student_dasboard/view_my_questions/view_the_question',methods=["GET","POST"],endpoint="view_the_question_endpoint")
+@student_required
 def view_the_question():
     action=request.form.get('action')
     if action=='apply':
@@ -565,7 +576,8 @@ def view_the_question():
 
 
 
-@app.route('/student_dashboard/view_question/questions_search', methods=['GET'])
+@app.route('/student_dashboard/view_question/questions_search', methods=['GET'],endpoint="questions_search_endpoint")
+@student_required
 def questions_search():
     search_text = request.args.get('search_text').lower()
 
@@ -618,10 +630,128 @@ def logout():
     return redirect(url_for('login'))
 
 
+############################################studen dashboard ends here###############
+############################################admin dashboard starts here##############
+@app.route('/admin_dashboard/companies/general_report',endpoint="company_general_report_endpoint")
+#@admin_required
+def company_general_report():
+    total_no_of_recruiting_companies=len(details.company_hr_userid_ends_with())
+    cursor=mysql.connection.cursor()
+    cursor.execute("""SELECT company_name, COUNT(*) AS accepted_students_count
+                    FROM applied_companies
+                    WHERE application_status = 1
+                    GROUP BY company_name
+                    HAVING COUNT(*) = (
+                        SELECT COUNT(*) AS max_count
+                        FROM applied_companies
+                        WHERE application_status = 1
+                        GROUP BY company_name
+                        ORDER BY max_count DESC
+                        LIMIT 1)
 
 
+    """)
+    top_recruiter=cursor.fetchall()
+    print(top_recruiter)
+    cursor.execute("""SELECT company_name, COUNT(*) AS accepted_students_count
+                FROM applied_companies
+                WHERE application_status = 1
+                GROUP BY company_name
+                HAVING COUNT(*) = (
+                    SELECT COUNT(*) AS max_count
+                    FROM applied_companies
+                    WHERE application_status = 1
+                    GROUP BY company_name
+                    ORDER BY max_count 
+                    LIMIT 1)
 
 
+    """)
+    bottom_recruiter=cursor.fetchall()
+    print(bottom_recruiter)
+
+    cursor.execute("""
+        WITH RecruitmentData AS (
+            SELECT 
+                company_name,
+                SUM(CASE WHEN application_status = 1 THEN 1 ELSE 0 END) /
+                NULLIF(COUNT(*), 0) * 100 AS recruitment_percentage
+            FROM 
+                applied_companies
+            GROUP BY 
+                company_name
+        )
+
+        SELECT 
+            company_name,
+            recruitment_percentage
+        FROM 
+            RecruitmentData
+        WHERE 
+            recruitment_percentage = (SELECT MAX(recruitment_percentage) FROM RecruitmentData);
+    """)
+    top_acceptance_rate = cursor.fetchall()
+
+    # Fetch bottom acceptance rate data from MySQL
+    cursor.execute("""
+        WITH RecruitmentData AS (
+            SELECT 
+                company_name,
+                SUM(CASE WHEN application_status = 1 THEN 1 ELSE 0 END) /
+                NULLIF(COUNT(*), 0) * 100 AS recruitment_percentage
+            FROM 
+                applied_companies
+            GROUP BY 
+                company_name
+        )
+
+        SELECT 
+            company_name,
+            recruitment_percentage
+        FROM 
+            RecruitmentData
+        WHERE 
+            recruitment_percentage = (SELECT MIN(recruitment_percentage) FROM RecruitmentData);
+    """)
+    bottom_acceptance_rate = cursor.fetchall()
+    top_acceptance_rate_companies=list(map(lambda x:x[0],top_acceptance_rate ))
+    #print(top_acceptance_rate_companies)
+    bottom_acceptance_rate_companies=list(map(lambda x:x[0],bottom_acceptance_rate ))
+    #print(top_acceptance_rate_companies)
+    top_acceptance_rate,bottom_acceptance_rate=[top_acceptance_rate[0][1],100-top_acceptance_rate[0][1]],[bottom_acceptance_rate[0][1],100-bottom_acceptance_rate[0][1]]
+    print(top_acceptance_rate_companies,bottom_acceptance_rate_companies,top_acceptance_rate,bottom_acceptance_rate,sep=" ")
+    cursor.close()
+    return "printed"
+
+
+    
+
+@app.route('/admin_dashboard/students/general_report',endpoint="student_general_report_endpoint")
+def student_general_report():
+
+    cursor=mysql.connection.cursor()
+    cursor.execute("SELECT COUNT(DISTINCT userid)  FROM student_details")
+
+    total_no_of_students=cursor.fetchall()
+
+    cursor.execute("SELECT COUNT(DISTINCT user_id)  FROM applied_companies")
+
+    total_no_of_applied_students=cursor.fetchall()
+
+    cursor.execute("SELECT COUNT( DISTINCT user_id)  FROM applied_companies WHERE application_status = 1")
+
+    total_no_of_placed_students=cursor.fetchall()
+
+    print(total_no_of_applied_students,total_no_of_placed_students,total_no_of_students)
+    cursor.execute("""
+                    SELECT user_id,student_name,company_name 
+                    FROM applied_companies
+                    WHERE COUNT( ####)
+                   """)
+
+    total_no_of_placed_students=cursor.fetchall()
+
+    return "hello world"
 
 
 if __name__ == '__main__':

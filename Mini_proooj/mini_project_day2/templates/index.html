@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph and Text</title>
+</head>
+<body>
+
+    <!-- Display the chart image -->
+    {% if chart_image_base64 %}
+        <img src="data:image/png;base64,{{ chart_image_base64 }}" alt="Sample Bar Chart">
+    {% endif %}
+
+    <!-- Display the sample text -->
+    <p>{{ sample_text }}</p>
+
+    <!-- Add a link to download PDF using wkhtmltopdf -->
+    <a href="{{ url_for('trigger_pdf_generation') }}" download="output.pdf">Download PDF</a>
+
+</body>
+</html>
