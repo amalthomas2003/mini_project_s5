@@ -4,8 +4,10 @@ import details
 from datetime import datetime,date
 import re
 import matplotlib.pyplot as plt
-from io import BytesIO
+import io
+import matplotlib
 import base64
+matplotlib.use('Agg')  # Use the Agg backend (non-interactive)
 
 current_date = date.today()
 current_date_str = current_date.strftime('%Y-%m-%d') #in yyyy-mm-dd format
@@ -86,6 +88,16 @@ def login():
             # if  User exists, set a session variable for their role
             session['user_id'] = user[1]
             session['role'] = role
+
+            current_datetime = datetime.now()
+
+            login_date = current_datetime.date()
+            login_time = current_datetime.time()
+            cursor=mysql.connection.cursor()
+
+            cursor.execute("INSERT INTO log_table(userid,designation,login_date,login_time) VALUES (%s,%s,%s,%s) ",(session['user_id'],session['role'],login_date,login_time))
+            mysql.connection.commit()
+            cursor.close()
             
 
             if role == 'student':
@@ -133,7 +145,7 @@ def student_dashboard():
 @app.route('/college_admin_dashboard')
 def college_admin_dashboard():
     if 'user_id' in session and session['role'] == 'college_admin':
-        return "Welcome to the college admin dashboard!"
+        return render_template("college_admin_dashboard.html")
     else:
         return redirect(url_for('login'))
 
@@ -204,6 +216,8 @@ def student_required(view_function):
         else:
             return redirect(url_for('login'))
     return decorated_function
+
+
 
 
 
@@ -403,6 +417,11 @@ def process_decision():
 ######################################################Student Starts here################################
 
 
+@app.route("/college_admin_dashboard", endpoint="college_admin_dashboard_endpoint")
+def college_admin_dashboard():
+    return render_template("college_admin_dashboard.html")
+
+
 @app.route('/student_dashboard/eligible_companies', endpoint="eligible_companies_endpoint")
 @student_required
 def eligible_companies():
@@ -497,7 +516,7 @@ def post_questions():
         question_date=datetime.now().strftime("%Y-%m-%d")
         if tags !=None and c_name != None:
             print("yay")
-            cur.execute("INSERT INTO questions(tags,userid,username,question,status,question_date,company_name) VALUES (%s,%s,%s,%s,%s,%s,%s)",(tags,session['user_id'],session['student_name'],content,1,question_date,c_name))
+            cur.execute("INSERT INTO questions(tags,userid,username,question,status,question_date,company_name) VALUES (%s,%s,%s,%s,%s,%s,%s)",(tags,session['user_id'],session['student_name'],content,2,question_date,c_name))
             mysql.connection.commit()
             cur.close()
         return redirect(url_for('student_dashboard'))
@@ -513,7 +532,7 @@ def view_questions():
             FROM questions AS Q
             JOIN student_details AS SD ON Q.userid = SD.userid
             WHERE Q.status = 1 
-            ORDER BY Q.question_date DESC
+            ORDER BY Q.q_id DESC
         """)
         all_questions=cur.fetchall()
         questions_data=list(all_questions)
@@ -632,9 +651,32 @@ def logout():
 
 ############################################studen dashboard ends here###############
 ############################################admin dashboard starts here##############
+
+def generate_bar_graph1(respective_company_placements):
+
+    companies=details.company_list
+
+    plt.bar(companies,
+            respective_company_placements)
+    plt.xlabel("<----Category---->")
+    plt.ylabel("<----Values---->")
+
+    image_stream = io.BytesIO()
+    plt.savefig(image_stream, format='png')
+    image_stream.seek(0)
+
+    image_base64 = base64.b64encode(image_stream.read()).decode('utf-8')
+
+    plt.close()
+
+    return image_base64
+
+
 @app.route('/admin_dashboard/companies/general_report',endpoint="company_general_report_endpoint")
 #@admin_required
 def company_general_report():
+
+
     total_no_of_recruiting_companies=len(details.company_hr_userid_ends_with())
     cursor=mysql.connection.cursor()
     cursor.execute("""SELECT company_name, COUNT(*) AS accepted_students_count
@@ -653,6 +695,22 @@ def company_general_report():
     """)
     top_recruiter=cursor.fetchall()
     print(top_recruiter)
+          
+          
+    placement_counts = []
+
+    for company in details.company_list:
+        query = (
+            "SELECT COUNT(*) FROM applied_companies "
+            "WHERE company_name = %s AND application_status = 1"
+        )
+        cursor.execute(query, (company,))
+        placement_count = cursor.fetchone()[0]
+        placement_counts.append(placement_count)
+        
+
+          
+    print(placement_counts)
     cursor.execute("""SELECT company_name, COUNT(*) AS accepted_students_count
                 FROM applied_companies
                 WHERE application_status = 1
@@ -719,12 +777,47 @@ def company_general_report():
     bottom_acceptance_rate_companies=list(map(lambda x:x[0],bottom_acceptance_rate ))
     #print(top_acceptance_rate_companies)
     top_acceptance_rate,bottom_acceptance_rate=[top_acceptance_rate[0][1],100-top_acceptance_rate[0][1]],[bottom_acceptance_rate[0][1],100-bottom_acceptance_rate[0][1]]
-    print(top_acceptance_rate_companies,bottom_acceptance_rate_companies,top_acceptance_rate,bottom_acceptance_rate,sep=" ")
-    cursor.close()
-    return "printed"
-
+    print(top_acceptance_rate_companies,bottom_acceptance_rate_companies,top_acceptance_rate,bottom_acceptance_rate,sep="----")
+    top_acceptance_rate_companies=" , ".join(top_acceptance_rate_companies)
+    bottom_acceptance_rate_companies=" , ".join(bottom_acceptance_rate_companies)
+    top_recruiter_number=top_recruiter[0][1]
+    top_recruiter=",".join(i[0] for i in top_recruiter)
+    
+    
+    bottom_recruiter_number=bottom_recruiter[0][1]
+    bottom_recruiter=",".join(i[0] for i in bottom_recruiter)
 
     
+
+    cursor.close()
+    return render_template('companies.html',total_no_of_recruiting_companies=total_no_of_recruiting_companies,
+                           har=str(top_acceptance_rate_companies)+" : "+str(round(float(top_acceptance_rate[0]),2)),
+                           top_recruiter=top_recruiter+" : "+str(top_recruiter_number),
+                           least_recruiter=bottom_recruiter+" : "+str(bottom_recruiter_number),
+                           lar=str(bottom_acceptance_rate_companies)+" : "+str(round(float(bottom_acceptance_rate[0]),2)),
+                           graph_image_company1=generate_bar_graph1(placement_counts))
+
+
+def generate_bar_graph(total_no_of_students,total_no_of_applied_students,total_no_of_placed_students):
+
+    colors = ['blue', 'orange', 'green']
+
+    plt.bar(['Total', 'Applied', 'Placed'],
+            [total_no_of_students[0][0], total_no_of_applied_students[0][0], total_no_of_placed_students[0][0]],color=colors)
+    plt.xlabel("<----Category---->")
+    plt.ylabel("<----Values---->")
+    plt.title("Graph")
+
+    image_stream = io.BytesIO()
+    plt.savefig(image_stream, format='png')
+    image_stream.seek(0)
+
+    image_base64 = base64.b64encode(image_stream.read()).decode('utf-8')
+
+    plt.close()
+
+    return image_base64
+
 
 @app.route('/admin_dashboard/students/general_report',endpoint="student_general_report_endpoint")
 def student_general_report():
@@ -742,16 +835,212 @@ def student_general_report():
 
     total_no_of_placed_students=cursor.fetchall()
 
-    print(total_no_of_applied_students,total_no_of_placed_students,total_no_of_students)
-    cursor.execute("""
-                    SELECT user_id,student_name,company_name 
-                    FROM applied_companies
-                    WHERE COUNT( ####)
-                   """)
+    pp=round(total_no_of_placed_students[0][0]/total_no_of_applied_students[0][0]*100,2)
 
-    total_no_of_placed_students=cursor.fetchall()
 
-    return "hello world"
+
+    return render_template("students.html",tnos=total_no_of_students[0][0],
+                           tnoas=total_no_of_applied_students[0][0],
+                           tnops=total_no_of_placed_students[0][0],
+                           pp=pp,
+                           graph_image=generate_bar_graph(total_no_of_students,total_no_of_applied_students,total_no_of_placed_students))
+
+
+
+
+@app.route('/admin_dashboard/view_question/questions_search', methods=['GET'],endpoint="admin_questions_search_endpoint")
+def questions_search():
+    search_text = request.args.get('search_text').lower()
+
+
+    if search_text:
+        cur=mysql.connection.cursor()
+        cur.execute("""
+            SELECT Q.username, Q.userid, Q.question, Q.question_date, Q.tags, Q.company_name, SD.points , Q.q_id, Q.status
+            FROM questions AS Q
+            JOIN student_details AS SD ON Q.userid = SD.userid
+            
+            ORDER BY Q.q_id DESC
+        """)
+        all_questions=cur.fetchall()
+        questions_data=list(all_questions)
+        cur.close()
+        questions_data1=[]
+        for question in questions_data:
+            rank = details.choose_rank(question[6])
+            font_style=rank[0]
+            name_color=rank[1]
+            style=rank[2]
+            weight=rank[3]
+            size=rank[4]
+            question+=(font_style,name_color,style,weight,size)
+            if (re.search(r'{}'.format(re.escape(search_text)),str(question[0]).lower()) or
+                re.search(r'{}'.format(re.escape(search_text)),str(question[1]).lower()) or
+                re.search(r'{}'.format(re.escape(search_text)),str(question[2]).lower()) or
+                re.search(r'{}'.format(re.escape(search_text)),str(question[3]).lower()) or
+                re.search(r'{}'.format(re.escape(search_text)),str(question[4]).lower()) or
+                re.search(r'{}'.format(re.escape(search_text)),str(question[5]).lower()) or
+                re.search(r'{}'.format(re.escape(search_text)),str(question[6]).lower()) or
+                re.search(r'{}'.format(re.escape(search_text)),str(question[7]).lower()) or
+                re.search(r'{}'.format(re.escape(search_text)),str(details.q_prefix().lower()+str(question[7]).lower())+details.q_suffix().lower())):
+                questions_data1.append(question)
+    else:
+        return redirect(url_for('admin_view_question_endpoint'))
+
+
+    return render_template('questions_approval.html', questions_data=questions_data1,q_suffix=details.q_suffix(),q_prefix=details.q_prefix())
+
+@app.route('/admin_dashboard/view_question', endpoint="admin_view_question_endpoint")
+def admin_view_question():
+    cur = mysql.connection.cursor()
+    cur.execute("""
+            SELECT Q.username, Q.userid, Q.question, Q.question_date, Q.tags, Q.company_name, SD.points , Q.q_id, Q.status
+            FROM questions AS Q
+            JOIN student_details AS SD ON Q.userid = SD.userid
+            ORDER BY Q.q_id DESC
+        """)
+    all_questions=cur.fetchall()
+    questions_data=list(all_questions)
+    cur.close()
+    return render_template('questions_approval.html', questions_data=questions_data,q_prefix=details.q_prefix(),q_suffix=details.q_suffix())
+
+@app.route('/update_question_status/<int:question_id>/<int:status>')
+def update_question_status(question_id, status):
+    update_question_in_database(question_id, status)
+    return redirect(url_for('admin_view_question_endpoint'))
+
+def update_question_in_database(question_id, status):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE questions SET status = %s WHERE q_id = %s", (status, question_id))
+    mysql.connection.commit()
+    cur.close()
+
+
+@app.route('/admin_dashboard/student/individual_report' , endpoint="s_individual_report_endpoint")
+def student_individual_report():
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        SELECT s.userid, s.name, COUNT(ac.company_name) AS num_applied,
+                 SUM(ac.application_status = 1) AS num_placed,
+                 SUM(ac.application_status = 0) AS num_rejected,
+                s.batch,ac.company_name,ac.application_status
+                 FROM student_details s LEFT JOIN applied_companies ac
+                 ON s.userid = ac.user_id GROUP BY s.userid, s.name, s.batch, ac.company_name, ac.application_status;
+
+    """)
+
+
+    data = cur.fetchall()
+    cur.execute("""
+    SELECT s.userid, s.name, COUNT(ac.company_name) AS num_applied,
+                SUM(ac.application_status = 1) AS num_placed,
+                SUM(ac.application_status = 0) AS num_rejected,
+            s.batch
+                FROM student_details s LEFT JOIN applied_companies ac
+                ON s.userid = ac.user_id GROUP BY s.userid, s.name, s.batch;
+
+    """)
+    
+    data1=cur.fetchall()
+    cur.close()
+    print(data,data1,sep="----------------------------")
+
+    temp_list=[]
+    count_temp=0
+    j=data1[count_temp]
+    for i in data:
+
+        if i[0]!=j[0] or i[1]!=j[1] or i[5]!=j[5]:
+            print(i[0],j[0],"<---i[0],j[0]")
+            print(i[1],j[1],"<---i[1],j[1]")
+
+            count_temp+=1
+        j=data1[count_temp]
+        print(data1[count_temp])
+        print(i,"<--i")
+        total_applied=j[2]
+        accepted=j[3]
+        rejected=j[4]
+        status="PENDING"
+        if i[7]==1:
+            status="PLACED"
+        elif i[7]==0:
+            status="REJECTED"
+        else:
+            pass
+        temp_tuple=(i[0],i[1],i[5],total_applied,accepted,i[6],rejected,status)
+        print(temp_tuple)
+        temp_list.append(temp_tuple)
+
+    data=tuple(temp_list)
+
+
+    return render_template('student_individual_report.html', data=data)
+
+
+#bar Graph for branch
+
+
+def generate_bar_graph_branch(branches,placed_list):
+
+    colors = ['blue', 'orange', 'green', 'red', 'purple', 'pink', 'brown', 'gray', 'cyan']
+
+
+    plt.bar(
+            placed_list,branches,color=colors)
+    plt.xlabel("<----Branch---->")
+    plt.ylabel("<----No of Placements---->")
+    plt.title("Branch Placement Graph")
+
+    image_stream = io.BytesIO()
+    plt.savefig(image_stream, format='png')
+    image_stream.seek(0)
+
+    image_base64 = base64.b64encode(image_stream.read()).decode('utf-8')
+
+    plt.close()
+
+    return image_base64
+
+
+@app.route('/admin_dashboard/branch/individual_report' , endpoint="b_individual_report_endpoint")
+def branch_individual_report():
+    cur = mysql.connection.cursor()
+
+    branch_individual_report = []
+
+    for i in details.branch_list:
+        cur.execute("""
+            SELECT  COUNT(ac.company_name) AS num_applied,
+                    SUM(ac.application_status = 1) AS num_placed,
+                    SUM(ac.application_status = 0) AS num_rejected
+            FROM student_details s LEFT JOIN applied_companies ac
+            ON s.userid = ac.user_id WHERE s.batch=%s
+        """, (i,))
+
+        data = cur.fetchone()+(i,)
+        branch_individual_report.append(data)
+
+    
+    
+    cur.close()
+    placed_list=[]
+    for i in branch_individual_report:
+        placed_list.append(i[0])
+    return render_template("branch_individual_report.html",graph_image=generate_bar_graph_branch(placed_list,details.branch_list),branch_individual_report=branch_individual_report)
+
+
+@app.route('/admin_dashboard/log_table' , endpoint="log_table_endpoint")
+def log_table():
+
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT * FROM log_table")
+    log_entries = cursor.fetchall()
+    cursor.close()
+    print(log_entries)
+    return render_template('log_table.html',log_entries=log_entries)
+
 
 
 if __name__ == '__main__':

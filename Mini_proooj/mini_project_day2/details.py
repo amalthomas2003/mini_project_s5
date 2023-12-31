@@ -1,7 +1,8 @@
 
 import re
 date_pattern = r'\d{4}-\d{2}-\d{2}'  # Regular expression pattern for 'yyyy-mm-dd' format
-
+company_list=['tcs','wipro','infosys']  #update the name of recruting companies, automatically reflected in company hr userid
+branch_list=["CU","ME","EE","CE","IT","AE","EC","AD","CS"]
 # Check if a date string matches the 'yyyy-mm-dd' format
 def is_valid_date(date_string):
     return bool(re.match(date_pattern, date_string))

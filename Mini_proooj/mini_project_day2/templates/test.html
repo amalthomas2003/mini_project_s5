@@ -1,12 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pie Chart Example</title>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .box1 {
+            position: relative;
+        }
+
+
+
+        #fullscreen-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            padding: 8px 12px;
+            background-color: #ff9900;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        #fullscreen-button:hover {
+            background-color: #ff0000;
+        }
+    </style>
 </head>
+
 <body>
-    <!-- Display the pie chart as an image -->
-    <img src="data:image/png;base64,{{ pie_chart_data }}" alt="Pie Chart">
+    <main>
+        <aside class="sidebar">
+            <div class="sidebar_inner">
+                <div class="logo">
+                    <!-- Your logo content... -->
+                </div>
+                <ul class="menu">
+                    <li class="sidebar_item inactive">
+                        <a href="/admin_dashboard">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="Currentcolor"
+                                class="bi bi-house" viewBox="0 0 24 24">
+                                <!-- Your house icon content... -->
+                            </svg>
+                        </a>
+                        <span><a href="/admin_dashboard">Dashboard</a></span>
+                    </li>
+
+                    <li class="sidebar_item inactive">
+                        <a href="/admin_dashboard/questions_approval">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="Currentcolor"
+                                class="bi bi-question-square" viewBox="0 0 24 24">
+                                <!-- Your question square icon content... -->
+                            </svg>
+                        </a>
+                        <span><a href="/admin_dashboard/questions_approval">Questions</a></span>
+                    </li>
+
+                    <li class="sidebar_item inactive">
+                        <a href="/admin_dashboard/students/general_report">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="Currentcolor"
+                                class="bi bi-mortarboard" viewBox="0 0 24 24">
+                                <!-- Your mortarboard icon content... -->
+                            </svg>
+                        </a>
+                        <span><a href="/admin_dashboard/students/general_report">Students</a></span>
+                    </li>
+
+                    <li class="sidebar_item inactive">
+                        <a href="/admin_dashboard/companies">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="Currentcolor"
+                                class="bi bi-buildings" viewBox="0 0 24 24">
+                                <!-- Your buildings icon content... -->
+                            </svg>
+                        </a>
+                        <span><a href="/admin_dashboard/companies">Companies</a></span>
+                    </li>
+
+                    <li class="sidebar_item inactive">
+                        <a href="/admin_dashboard/database">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="Currentcolor"
+                                class="bi bi-database" viewBox="0 0 24 24">
+                                <!-- Your database icon content... -->
+                            </svg>
+                        </a>
+                        <span><a href="/admin_dashboard/database">Database</a></span>
+                    </li>
+
+                    <li class="sidebar_item inactive">
+                        <a href="/admin_dashboard/system">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="Currentcolor"
+                                class="bi bi-gear-wide-connected" viewBox="0 0 24 24">
+                                <!-- Your gear-wide-connected icon content... -->
+                            </svg>
+                        </a>
+                        <span><a href="/admin_dashboard/system">System</a></span>
+                    </li>
+
+                    <li class="sidebar_item inactive">
+                        <a href="/admin_dashboard/logs">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="Currentcolor"
+                                class="bi bi-terminal" viewBox="0 0 24 24">
+                                <!-- Your terminal icon content... -->
+                            </svg>
+                        </a>
+                        <span><a href="/admin_dashboard/logs">Logs</a></span>
+                    </li>
+                </ul>
+
+                <div class="logout">
+                    <ul class="menu">
+                        <li class="sidebar_item">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="Currentcolor"
+                                class="bi bi-box-arrow-in-left" viewBox="0 0 24 24">
+                                <!-- Your box-arrow-in-left icon content... -->
+                            </svg>
+                            <span>Logout</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+        section>
+            <h2>Companies</h2>
+            <div class="container">
+                <div class="box1">
+                    <img src="data:image/png;base64,{{ graph_image_company1 }}" alt="Bar Graph" id="graph-image">
+                    <div id="fullscreen-button" onclick="toggleFullscreen()">Fullscreen</div>
+                </div>
+                <div class="box">
+                    <h1>Total Number Of Recruiting Companies</h1>
+                    <h1 class="large-text">{{total_no_of_recruiting_companies}}</h1>
+                    
+                </div>
+                <div class="box">
+                    <h1>Most Recruitments
+                    </h1>
+                    <h1 class="large-text1">{{top_recruiter|upper}}</h1>
+                    
+                </div>
+                <div class="box">
+                    <h1>Least Recruitments
+                    </h1>
+                    <h1 class="large-text1">{{least_recruiter|upper}}</h1>
+                    
+                </div>
+                <div class="box">
+                    <h1>Highest Acceptence Rate
+                    </h1>
+                    <h1 class="large-text1">{{har|upper}}</h1>
+                    
+                </div>   
+                <div class="box">
+                    <h1>Lowest Acceptence Rate
+                    </h1>
+                    <h1 class="large-text1">{{lar|upper}}</h1>
+                    
+                </div>  
+   
+            </div>
+        </section>
+    </main>
+    <script>
+        let sideBar = document.querySelector('.sidebar');
+
+        sideBar.addEventListener('mouseenter', () => {
+            sideBar.classList.add('expand');
+        });
+
+        sideBar.addEventListener('mouseleave', () => {
+            sideBar.classList.remove('expand');
+        });
+        function toggleFullscreen() {
+            var elem = document.getElementById("graph-image");
+
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.mozRequestFullScreen) { /* Firefox */
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE/Edge */
+                elem.msRequestFullscreen();
+            }
+        }
+
+    </script>
 </body>
+
 </html>
